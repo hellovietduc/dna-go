@@ -4,128 +4,141 @@ import (
 	"errors"
 )
 
+const (
+	// EmptyValue is a constant indicates that
+	// a value returned from the Array is empty.
+	EmptyValue       = 0
+	defaultCapacity  = 8
+	growShrinkFactor = 2
+	upperLoadFactor  = 1.0
+	lowerLoadFactor  = 0.25
+	indexOutOfRange  = "Index is out of range"
+)
+
+// Array is a struct for storing linear equal-size data.
 type Array struct {
-	arr  []int
-	size int
+	items []int
+	size  int
 }
 
-func NewArray(capacity int) *Array {
+// NewArray creates a new Array instance.
+func NewArray(args ...int) *Array {
+	capacity := defaultCapacity
+	if args != nil && args[0] > 0 {
+		capacity = args[0]
+	}
 	return &Array{
-		arr: make([]int, capacity),
+		items: make([]int, capacity),
 	}
 }
 
+// Size returns the number of items being stored in the Array.
 func (a *Array) Size() int {
 	return a.size
 }
 
+// Capacity returns the current maximum number of items
+// that can be stored in the Array.
 func (a *Array) Capacity() int {
-	return len(a.arr)
+	return len(a.items)
 }
 
+// IsEmpty returns whether the Array has no items or not.
 func (a *Array) IsEmpty() bool {
-	return a.Size() == 0
+	return a.size == 0
 }
 
+// ValueAt returns the value stored at the given index.
 func (a *Array) ValueAt(index int) (int, error) {
-	if index < 0 || index >= a.Size() {
-		return -1, errors.New("Index is out of range")
+	if index < 0 || index >= a.size {
+		return EmptyValue, errors.New(indexOutOfRange)
 	}
-	return a.arr[index], nil
+	return a.items[index], nil
 }
 
-func (a *Array) Insert(item int, index int) error {
-	if index < 0 || index >= a.Capacity() {
-		return errors.New("Index is out of range")
+// Insert adds the value to the given index and shift
+// the items from that index to the right.
+func (a *Array) Insert(value int, index int) error {
+	if index < 0 || index >= a.size {
+		return errors.New(indexOutOfRange)
 	}
 
-	a.checkAndShrink()
+	if a.getLoadFactor() >= upperLoadFactor {
+		a.changeCapacity(true)
+	}
 
 	// shift array to the right
 	for i := a.size; i > index; i-- {
-		a.arr[i] = a.arr[i-1]
+		a.items[i] = a.items[i-1]
 	}
 
-	a.arr[index] = item
-
-	// insert at index out of size range
-	// will increase the size to index + 1
-	if index >= a.Size() {
-		a.size = index + 1
-	} else {
-		a.size++
-	}
+	a.items[index] = value
+	a.size++
 
 	return nil
 }
 
-func (a *Array) Append(item int) {
-	a.checkAndShrink()
+// Append adds the value to the end of the Array.
+func (a *Array) Append(value int) {
+	if a.getLoadFactor() >= upperLoadFactor {
+		a.changeCapacity(true)
+	}
 
-	a.arr[a.size] = item
+	a.items[a.size] = value
 	a.size++
 }
 
-func (a *Array) Pop() (int, error) {
-	if a.IsEmpty() {
-		return -1, errors.New("Array is empty")
+// RemoveAt removes the value at the given index and
+// shift the items from that index to the left.
+func (a *Array) RemoveAt(index int) error {
+	if index < 0 || index >= a.size {
+		return errors.New(indexOutOfRange)
 	}
 
-	a.checkAndReduce()
-
-	a.size--
-	value := a.arr[a.size]
-
-	return value, nil
-}
-
-func (a *Array) RemoveAt(index int) (int, error) {
-	if index < 0 || index >= a.Capacity() {
-		return -1, errors.New("Index is out of range")
+	if a.getLoadFactor() < lowerLoadFactor {
+		a.changeCapacity(false)
 	}
-
-	if a.IsEmpty() {
-		return -1, errors.New("Array is empty")
-	}
-
-	a.checkAndReduce()
-
-	a.size--
-	value := a.arr[index]
 
 	// shift array to the left
 	for i := index; i < a.size; i++ {
-		a.arr[i] = a.arr[i+1]
+		a.items[i] = a.items[i+1]
 	}
 
-	return value, nil
+	a.size--
+	return nil
 }
 
-func (a *Array) checkAndShrink() {
-	capacity := len(a.arr)
-	if a.size < capacity {
-		return
+// Pop removes that last item in the Array.
+func (a *Array) Pop() int {
+	if a.IsEmpty() {
+		return EmptyValue
 	}
 
-	// size = capacity, double the capacity
-	newArr := make([]int, capacity*2)
-	for i := 0; i < a.size; i++ {
-		newArr[i] = a.arr[i]
+	if a.getLoadFactor() < lowerLoadFactor {
+		a.changeCapacity(false)
 	}
-	a.arr = newArr
+
+	a.size--
+	return a.items[a.size]
 }
 
-func (a *Array) checkAndReduce() {
-	capacity := len(a.arr)
-	if a.size > capacity/4 {
-		return
+func (a *Array) getLoadFactor() float64 {
+	return float64(a.size) / float64(len(a.items))
+}
+
+func (a *Array) changeCapacity(isGrow bool) {
+	oldCapacity := len(a.items)
+	var newCapacity int
+	if isGrow {
+		newCapacity = oldCapacity * growShrinkFactor
+	} else {
+		newCapacity = oldCapacity / growShrinkFactor
 	}
 
-	// size is <= 1/4 of capacity
-	// cut half of the capacity
-	newArr := make([]int, capacity/2)
+	newArr := make([]int, newCapacity)
 	for i := 0; i < a.size; i++ {
-		newArr[i] = a.arr[i]
+		newArr[i] = a.items[i]
 	}
-	a.arr = newArr
+
+	a.items = newArr
 }

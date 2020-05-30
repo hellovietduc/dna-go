@@ -5,126 +5,111 @@ import (
 )
 
 func TestArray(t *testing.T) {
-	t.Run("Test init", func(t *testing.T) {
-		initialCapacity := 10
-		arr := NewArray(initialCapacity)
-
-		if arr.IsEmpty() == false || arr.Size() != 0 {
-			t.Error("New array must be empty")
-		}
-
-		if actualCapacity := arr.Capacity(); actualCapacity != initialCapacity {
-			t.Errorf("New array capacity must equal %d, found %d", initialCapacity, actualCapacity)
+	t.Run("Create new array with default capacity", func(t *testing.T) {
+		arr := NewArray()
+		if capacity := arr.Capacity(); capacity != defaultCapacity {
+			t.Errorf("New array capacity should equal %d, found %d", defaultCapacity, capacity)
 		}
 	})
 
-	t.Run("Test append", func(t *testing.T) {
-		arr := NewArray(10)
-		expectedSize := 5
-
-		for i := 0; i < expectedSize; i++ {
-			arr.Append(i * 10)
+	t.Run("Create new array with custom capacity", func(t *testing.T) {
+		customCapacity := 10
+		arr := NewArray(customCapacity)
+		if capacity := arr.Capacity(); capacity != customCapacity {
+			t.Errorf("New array capacity should equal %d, found %d", customCapacity, capacity)
 		}
+	})
 
-		if actualSize := arr.Size(); actualSize != expectedSize {
-			t.Errorf("Array size must equal %d, found %d", expectedSize, actualSize)
+	arr := NewArray()
+
+	t.Run("Check size for empty array", func(t *testing.T) {
+		if arr.Size() != 0 || arr.IsEmpty() != true {
+			t.Error("Empty array should have 0 size")
 		}
+	})
 
-		for i := 0; i < expectedSize; i++ {
-			if value, _ := arr.ValueAt(i); value != i*10 {
-				t.Errorf("Value at index %d must equal %d, found %d", i, i*10, value)
+	t.Run("Get value from empty array, get indexOutOfRange", func(t *testing.T) {
+		if _, err := arr.ValueAt(0); err == nil {
+			t.Error("Calling ValueAt on empty array should return indexOutOfRange")
+		}
+	})
+
+	t.Run("Insert value to out-of-range index, get indexOutOfRange", func(t *testing.T) {
+		if err := arr.Insert(1, 1); err == nil {
+			t.Error("Insert to index 1 on empty array should return indexOutOfRange")
+		}
+	})
+
+	t.Run("Remove value at out-of-range index, get indexOutOfRange", func(t *testing.T) {
+		if err := arr.RemoveAt(1); err == nil {
+			t.Error("Remove value at index 1 on empty array should return indexOutOfRange")
+		}
+	})
+
+	t.Run("Pop value from empty array, get EmptyValue", func(t *testing.T) {
+		if value := arr.Pop(); value != EmptyValue {
+			t.Error("Value popped from empty array should be EmptyValue")
+		}
+	})
+
+	t.Run("Append values to array, get correct appended values", func(t *testing.T) {
+		for i := 1; i < 4; i++ {
+			arr.Append(i)
+
+			if value, _ := arr.ValueAt(i - 1); value != i {
+				t.Errorf("Wrong value at index %d, expected %d, found %d", i-1, i, value)
 			}
 		}
 	})
 
-	t.Run("Test insert", func(t *testing.T) {
-		arr := NewArray(10)
-		insertIndex := 2
-		insertValue := 99
+	t.Run("Insert value at specified index, get correct inserted value", func(t *testing.T) {
+		arr.Insert(4, 0)
 
-		if err := arr.Insert(insertValue, insertIndex); err != nil {
-			t.Errorf("Insert to index %d must not fail", insertIndex)
-		}
-
-		if value, _ := arr.ValueAt(insertIndex); value != insertValue {
-			t.Errorf("Inserted value at index %d must equal %d", insertIndex, insertValue)
-		}
-
-		insertIndex = -1
-
-		if err := arr.Insert(insertValue, insertIndex); err == nil {
-			t.Errorf("Insert to index %d must fail", insertIndex)
-		}
-
-		insertIndex = arr.Capacity()
-
-		if err := arr.Insert(insertValue, insertIndex); err == nil {
-			t.Errorf("Insert to index %d must fail", insertIndex)
+		for i := 0; i < arr.Size(); i++ {
+			value, _ := arr.ValueAt(i)
+			if i == 0 {
+				if value != 4 {
+					t.Errorf("Wrong value at index 0, expected 4, found %d", value)
+				}
+			} else {
+				if value != i {
+					t.Errorf("Wrong value at index %d, expected %d, found %d", i, i, value)
+				}
+			}
 		}
 	})
 
-	t.Run("Test pop", func(t *testing.T) {
-		arr := NewArray(10)
+	t.Run("Append more values so array must grow in capacity", func(t *testing.T) {
+		t.Logf("Capacity before: %d", arr.Capacity())
 
-		for i := 0; i < 5; i++ {
-			arr.Append(i * 10)
+		for i := 4; i < 20; i++ {
+			arr.Append(i)
 		}
 
-		if value, _ := arr.Pop(); value != 40 {
-			t.Errorf("Popped value must equal 40, found %d", value)
-		}
+		t.Logf("Capacity after: %d", arr.Capacity())
+	})
 
-		for i := 0; i < 4; i++ {
+	t.Run("Remove value at specified index, get different value from that index", func(t *testing.T) {
+		arr.RemoveAt(0)
+
+		if value, _ := arr.ValueAt(0); value == 4 {
+			t.Error("Wrong value at index 0, value 4 removed")
+		}
+	})
+
+	t.Run("Pop from unempty array, get correct value", func(t *testing.T) {
+		if arr.Pop() != 19 {
+			t.Error("Pop value should be 19")
+		}
+	})
+
+	t.Run("Remove more values so array must shrink in capacity", func(t *testing.T) {
+		t.Logf("Capacity before: %d", arr.Capacity())
+
+		for i := 0; i < 18; i++ {
 			arr.Pop()
 		}
 
-		if _, err := arr.Pop(); err == nil {
-			t.Error("Popping an empty array must fail")
-		}
-	})
-
-	t.Run("Test remove", func(t *testing.T) {
-		arr := NewArray(10)
-		removeIndex := 2
-
-		if _, err := arr.RemoveAt(removeIndex); err == nil {
-			t.Error("Remove a value from an empty array must fail")
-		}
-
-		for i := 0; i < 5; i++ {
-			arr.Append(i * 10)
-		}
-
-		if _, err := arr.RemoveAt(removeIndex); err != nil {
-			t.Errorf("Remove value at index %d must not fail", removeIndex)
-		}
-	})
-
-	t.Run("Test shrink", func(t *testing.T) {
-		arr := NewArray(10)
-		expectedCapacity := 80
-
-		for i := 0; i < 50; i++ {
-			arr.Append(i)
-		}
-
-		if actualCapacity := arr.Capacity(); actualCapacity != expectedCapacity {
-			t.Errorf("Array capacity must equal %d, found %d", expectedCapacity, actualCapacity)
-		}
-	})
-
-	t.Run("Test reduce", func(t *testing.T) {
-		arr := NewArray(80)
-		expectedCapacity := 40
-
-		for i := 0; i < 20; i++ {
-			arr.Append(i)
-		}
-
-		arr.Pop()
-
-		if actualCapacity := arr.Capacity(); actualCapacity != expectedCapacity {
-			t.Errorf("Array capacity must equal %d, found %d", expectedCapacity, actualCapacity)
-		}
+		t.Logf("Capacity after: %d", arr.Capacity())
 	})
 }
