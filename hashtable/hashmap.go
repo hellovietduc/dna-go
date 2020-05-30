@@ -1,119 +1,128 @@
 package hashtable
 
 const (
+	// KeyNotFound is a constant indicates that
+	// a key cannot be found in the HashMap.
 	KeyNotFound     = 0
 	defaultCapacity = 8
 	upperLoadFactor = 0.75
 	lowerLoadFactor = 0.2
 )
 
-type Node struct {
+type node struct {
 	key   int
 	value int
-	next  *Node
+	next  *node
 }
 
+// HashMap is a struct for storing key-value data.
 type HashMap struct {
-	items []*Node
+	items []*node
 	size  int
 }
 
+// NewHashMap creates a new HashMap instance.
 func NewHashMap() *HashMap {
 	return &HashMap{
-		items: make([]*Node, defaultCapacity),
+		items: make([]*node, defaultCapacity),
 	}
 }
 
+// Insert adds a new pair of key-value to the HashMap.
+// If the key already exists, it overwrites the key's value.
 func (h *HashMap) Insert(key int, value int) {
 	if h.getLoadFactor() >= upperLoadFactor {
 		h.rehash(true)
 	}
 
-	newNode := &Node{
+	newNode := &node{
 		key:   key,
 		value: value,
 	}
 
 	h.size++
 	index := h.hash(key)
-	node := h.items[index]
+	curNode := h.items[index]
 
-	if node == nil {
+	if curNode == nil {
 		// first node in the linked list
 		h.items[index] = newNode
 		return
 	}
 
 	for true {
-		if node.key == key {
+		if curNode.key == key {
 			// found key to overwrite value
-			node.value = value
+			curNode.value = value
 			return
 		}
 
-		if node.next == nil {
+		if curNode.next == nil {
 			// or reach the last node
 			break
 		}
 
-		node = node.next
+		curNode = curNode.next
 	}
 
-	node.next = newNode
+	curNode.next = newNode
 }
 
+// Search returns the value for the given key.
+// If the key cannot be found, it returns KeyNotFound.
 func (h *HashMap) Search(key int) int {
 	index := h.hash(key)
-	node := h.items[index]
+	curNode := h.items[index]
 
-	if node == nil {
+	if curNode == nil {
 		return KeyNotFound
 	}
 
-	for node.key != key {
-		if node.next == nil {
+	for curNode.key != key {
+		if curNode.next == nil {
 			// reach the last node
 			return KeyNotFound
 		}
 
-		node = node.next
+		curNode = curNode.next
 	}
 
-	return node.value
+	return curNode.value
 }
 
+// Delete removes a key from the HashMap.
 func (h *HashMap) Delete(key int) {
 	if h.getLoadFactor() < lowerLoadFactor {
 		h.rehash(false)
 	}
 
 	index := h.hash(key)
-	node := h.items[index]
+	curNode := h.items[index]
 
-	if node == nil {
+	if curNode == nil {
 		return
 	}
 
-	var prevNode *Node
-	for node.key != key {
-		if node.next == nil {
+	var prevNode *node
+	for curNode.key != key {
+		if curNode.next == nil {
 			// reach the last node
 			return
 		}
 
-		prevNode = node
-		node = node.next
+		prevNode = curNode
+		curNode = curNode.next
 	}
 
 	if prevNode == nil {
 		// delete the first node in the linked list
-		h.items[index] = node.next
+		h.items[index] = curNode.next
 	} else {
-		prevNode.next = node.next
+		prevNode.next = curNode.next
 	}
 
 	// remove the reference from this node
-	node.next = nil
+	curNode.next = nil
 	h.size--
 }
 
@@ -138,15 +147,15 @@ func (h *HashMap) rehash(isGrowSize bool) {
 		newLength = currLength / 2
 	}
 
-	newArr := make([]*Node, newLength)
+	newArr := make([]*node, newLength)
 	oldArr := h.items
 	h.items = newArr
 	h.size = 0
 
-	for _, node := range oldArr {
-		for node != nil {
-			h.Insert(node.key, node.value)
-			node = node.next
+	for _, curNode := range oldArr {
+		for curNode != nil {
+			h.Insert(curNode.key, curNode.value)
+			curNode = curNode.next
 		}
 	}
 }
