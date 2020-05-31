@@ -59,7 +59,7 @@ func (a *Array) ValueAt(index int) (int, error) {
 // Insert adds the value to the given index and shift
 // the items from that index to the right.
 func (a *Array) Insert(value int, index int) error {
-	if index < 0 || index >= a.size {
+	if index < 0 || index > a.size {
 		return errors.New(indexOutOfRange)
 	}
 
