@@ -44,25 +44,19 @@ func (h *HashMap) Insert(key int, value int) {
 	index := h.hash(key)
 	curNode := h.items[index]
 
-	if curNode == nil {
-		// first node in the linked list
-		h.items[index] = newNode
-		return
-	}
-
-	for true {
+	for curNode != nil {
 		if curNode.key == key {
-			// found key to overwrite value
 			curNode.value = value
 			return
 		}
 
-		if curNode.next == nil {
-			// or reach the last node
-			break
-		}
-
 		curNode = curNode.next
+	}
+
+	if curNode == nil {
+		// first node in the linked list
+		h.items[index] = newNode
+		return
 	}
 
 	curNode.next = newNode
@@ -74,20 +68,15 @@ func (h *HashMap) Search(key int) int {
 	index := h.hash(key)
 	curNode := h.items[index]
 
-	if curNode == nil {
-		return KeyNotFound
-	}
-
-	for curNode.key != key {
-		if curNode.next == nil {
-			// reach the last node
-			return KeyNotFound
+	for curNode != nil {
+		if curNode.key == key {
+			return curNode.value
 		}
 
 		curNode = curNode.next
 	}
 
-	return curNode.value
+	return KeyNotFound
 }
 
 // Delete removes a key from the HashMap.
@@ -99,26 +88,23 @@ func (h *HashMap) Delete(key int) {
 	index := h.hash(key)
 	curNode := h.items[index]
 
-	if curNode == nil {
-		return
-	}
-
 	var prevNode *node
-	for curNode.key != key {
-		if curNode.next == nil {
-			// reach the last node
-			return
+	for curNode != nil {
+		if curNode.key == key {
+			if prevNode == nil {
+				// delete the first node in the linked list
+				h.items[index] = curNode.next
+			} else {
+				prevNode.next = curNode.next
+			}
 		}
 
 		prevNode = curNode
 		curNode = curNode.next
 	}
 
-	if prevNode == nil {
-		// delete the first node in the linked list
-		h.items[index] = curNode.next
-	} else {
-		prevNode.next = curNode.next
+	if curNode == nil {
+		return
 	}
 
 	// remove the reference from this node
