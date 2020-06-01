@@ -3,10 +3,11 @@ package chaining
 const (
 	// KeyNotFound is a constant indicates that
 	// a key cannot be found in the HashMap.
-	KeyNotFound     = 0
-	defaultCapacity = 8
-	upperLoadFactor = 0.75
-	lowerLoadFactor = 0.2
+	KeyNotFound      = 0
+	defaultCapacity  = 8
+	upperLoadFactor  = 0.75
+	lowerLoadFactor  = 0.2
+	growShrinkFactor = 2
 )
 
 type node struct {
@@ -32,7 +33,7 @@ func NewHashMap() *HashMap {
 // If the key already exists, it overwrites the key's value.
 func (h *HashMap) Insert(key int, value int) {
 	if h.getLoadFactor() >= upperLoadFactor {
-		h.rehash(true)
+		h.grow()
 	}
 
 	newNode := &node{
@@ -82,7 +83,7 @@ func (h *HashMap) Search(key int) int {
 // Delete removes a key from the HashMap.
 func (h *HashMap) Delete(key int) {
 	if h.getLoadFactor() < lowerLoadFactor {
-		h.rehash(false)
+		h.shrink()
 	}
 
 	index := h.hash(key)
@@ -124,15 +125,17 @@ func (h *HashMap) hash(key int) int {
 	return key % len(h.items)
 }
 
-func (h *HashMap) rehash(isGrowSize bool) {
-	currLength := len(h.items)
-	var newLength int
-	if isGrowSize == true {
-		newLength = currLength * 2
-	} else {
-		newLength = currLength / 2
-	}
+func (h *HashMap) grow() {
+	newLength := len(h.items) * growShrinkFactor
+	h.rehash(newLength)
+}
 
+func (h *HashMap) shrink() {
+	newLength := len(h.items) / growShrinkFactor
+	h.rehash(newLength)
+}
+
+func (h *HashMap) rehash(newLength int) {
 	newArr := make([]*node, newLength)
 	oldArr := h.items
 	h.items = newArr
