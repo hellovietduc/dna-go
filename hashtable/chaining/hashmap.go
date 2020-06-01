@@ -100,6 +100,7 @@ func (h *HashMap) Delete(key int) {
 			} else {
 				prevNode.next = curNode.next
 			}
+			break
 		}
 
 		prevNode = curNode
