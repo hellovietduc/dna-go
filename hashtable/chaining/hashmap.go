@@ -1,4 +1,4 @@
-package hashtable
+package chaining
 
 const (
 	// KeyNotFound is a constant indicates that
