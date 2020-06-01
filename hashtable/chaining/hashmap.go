@@ -47,6 +47,7 @@ func (h *HashMap) Insert(key int, value int) {
 
 	for curNode != nil {
 		if curNode.key == key {
+			// overwrite key
 			curNode.value = value
 			return
 		}
@@ -60,6 +61,7 @@ func (h *HashMap) Insert(key int, value int) {
 		return
 	}
 
+	// last node in the linked list
 	curNode.next = newNode
 }
 
@@ -105,6 +107,7 @@ func (h *HashMap) Delete(key int) {
 	}
 
 	if curNode == nil {
+		// key not found
 		return
 	}
 
