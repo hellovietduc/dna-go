@@ -28,13 +28,14 @@ func TestHashMap(t *testing.T) {
 	})
 
 	t.Run("Insert more keys so the HashMap must grow bigger in capacity", func(t *testing.T) {
-		t.Logf("Capacity before: %d", hashMap.capacity())
-
+		capacityBefore := hashMap.capacity()
 		for i := 4; i < 20; i++ {
 			hashMap.Insert(i, i)
 		}
-
-		t.Logf("Capacity after: %d", hashMap.capacity())
+		capacityAfter := hashMap.capacity()
+		if capacityAfter < capacityBefore {
+			t.Errorf("Capacity should grow when inserting more keys, before %d, after %d", capacityBefore, capacityAfter)
+		}
 	})
 
 	t.Run("Search for non-existed keys, get KeyNotFound", func(t *testing.T) {
@@ -56,12 +57,13 @@ func TestHashMap(t *testing.T) {
 	})
 
 	t.Run("Delete more keys so the HashMap must reduce smaller in capacity", func(t *testing.T) {
-		t.Logf("Capacity before: %d", hashMap.capacity())
-
+		capacityBefore := hashMap.capacity()
 		for i := 4; i < 20; i++ {
 			hashMap.Delete(i)
 		}
-
-		t.Logf("Capacity after: %d", hashMap.capacity())
+		capacityAfter := hashMap.capacity()
+		if capacityAfter >= capacityBefore {
+			t.Errorf("Capacity should shrink when deleting more keys, before %d, after %d", capacityBefore, capacityAfter)
+		}
 	})
 }
