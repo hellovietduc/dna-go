@@ -14,6 +14,7 @@ type node struct {
 	key   int
 	value int
 	next  *node
+	prev  *node
 }
 
 // HashMap is a struct for storing key-value data.
@@ -41,45 +42,25 @@ func (h *HashMap) Insert(key int, value int) {
 		value: value,
 	}
 
-	h.size++
-	index := h.hash(key)
-	curNode := h.items[index]
-
-	for curNode != nil {
-		if curNode.key == key {
-			// overwrite key
-			curNode.value = value
-			return
-		}
-
-		curNode = curNode.next
-	}
-
-	if curNode == nil {
-		// first node in the linked list
-		h.items[index] = newNode
+	foundNode, index := h.searchNode(key)
+	if foundNode != nil {
+		// overwrite value of this key
+		foundNode.value = value
 		return
 	}
 
-	// last node in the linked list
-	curNode.next = newNode
-}
-
-// Search returns the value for the given key.
-// If the key cannot be found, it returns KeyNotFound.
-func (h *HashMap) Search(key int) int {
-	index := h.hash(key)
-	curNode := h.items[index]
-
-	for curNode != nil {
-		if curNode.key == key {
-			return curNode.value
+	h.size++
+	if curNode := h.items[index]; curNode == nil {
+		// first node in the linked list
+		h.items[index] = newNode
+	} else {
+		// last node in the linked list
+		for curNode.next != nil {
+			curNode = curNode.next
 		}
-
-		curNode = curNode.next
+		curNode.next = newNode
+		newNode.prev = curNode
 	}
-
-	return KeyNotFound
 }
 
 // Delete removes a key from the HashMap.
@@ -88,33 +69,52 @@ func (h *HashMap) Delete(key int) {
 		h.shrink()
 	}
 
-	index := h.hash(key)
-	curNode := h.items[index]
-
-	var prevNode *node
-	for curNode != nil {
-		if curNode.key == key {
-			if prevNode == nil {
-				// delete the first node in the linked list
-				h.items[index] = curNode.next
-			} else {
-				prevNode.next = curNode.next
-			}
-			break
-		}
-
-		prevNode = curNode
-		curNode = curNode.next
-	}
-
-	if curNode == nil {
-		// key not found
+	foundNode, index := h.searchNode(key)
+	if foundNode == nil {
 		return
 	}
 
-	// remove the reference from this node
-	curNode.next = nil
 	h.size--
+
+	if foundNode.prev == nil {
+		// first node in the linked list
+		h.items[index] = foundNode.next
+		return
+	}
+
+	if foundNode.next == nil {
+		// last node in the linked list
+		foundNode.prev.next = nil
+	}
+
+	prevNode := foundNode.prev
+	nextNode := foundNode.next
+	prevNode.next = nextNode
+	nextNode.prev = prevNode
+}
+
+// Search returns the value for the given key.
+// If the key cannot be found, it returns KeyNotFound.
+func (h *HashMap) Search(key int) int {
+	if foundNode, _ := h.searchNode(key); foundNode != nil {
+		return foundNode.value
+	}
+	return KeyNotFound
+}
+
+func (h *HashMap) searchNode(key int) (*node, int) {
+	index := h.hash(key)
+	curNode := h.items[index]
+
+	for curNode != nil {
+		if curNode.key == key {
+			return curNode, index
+		}
+
+		curNode = curNode.next
+	}
+
+	return nil, index
 }
 
 func (h *HashMap) capacity() int {
