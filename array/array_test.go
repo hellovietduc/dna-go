@@ -12,14 +12,6 @@ func TestArray(t *testing.T) {
 		}
 	})
 
-	t.Run("Create new array with custom capacity", func(t *testing.T) {
-		customCapacity := 10
-		arr := NewArray(customCapacity)
-		if capacity := arr.Capacity(); capacity != customCapacity {
-			t.Errorf("New array capacity should equal %d, found %d", customCapacity, capacity)
-		}
-	})
-
 	arr := NewArray()
 
 	t.Run("Check size for empty array", func(t *testing.T) {

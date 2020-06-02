@@ -22,13 +22,9 @@ type Array struct {
 }
 
 // NewArray creates a new Array instance.
-func NewArray(args ...int) *Array {
-	capacity := defaultCapacity
-	if args != nil && args[0] > 0 {
-		capacity = args[0]
-	}
+func NewArray() *Array {
 	return &Array{
-		items: make([]int, capacity),
+		items: make([]int, defaultCapacity),
 	}
 }
 
