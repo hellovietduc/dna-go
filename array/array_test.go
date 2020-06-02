@@ -72,13 +72,14 @@ func TestArray(t *testing.T) {
 	})
 
 	t.Run("Append more values so array must grow in capacity", func(t *testing.T) {
-		t.Logf("Capacity before: %d", arr.Capacity())
-
+		capacityBefore := arr.Capacity()
 		for i := 4; i < 20; i++ {
 			arr.Append(i)
 		}
-
-		t.Logf("Capacity after: %d", arr.Capacity())
+		capacityAfter := arr.Capacity()
+		if capacityAfter <= capacityBefore {
+			t.Errorf("Capacity should grow when inserting more values, before %d, after %d", capacityBefore, capacityAfter)
+		}
 	})
 
 	t.Run("Remove value at specified index, get different value from that index", func(t *testing.T) {
@@ -96,12 +97,13 @@ func TestArray(t *testing.T) {
 	})
 
 	t.Run("Remove more values so array must shrink in capacity", func(t *testing.T) {
-		t.Logf("Capacity before: %d", arr.Capacity())
-
+		capacityBefore := arr.Capacity()
 		for i := 0; i < 18; i++ {
 			arr.Pop()
 		}
-
-		t.Logf("Capacity after: %d", arr.Capacity())
+		capacityAfter := arr.Capacity()
+		if capacityAfter >= capacityBefore {
+			t.Errorf("Capacity should shrink when removing more values, before %d, after %d", capacityBefore, capacityAfter)
+		}
 	})
 }
