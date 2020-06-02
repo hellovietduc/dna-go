@@ -48,6 +48,7 @@ func (h *HashMap) Insert(key int, value int) {
 	if foundNode != nil {
 		// overwrite value of this key
 		foundNode.value = value
+		foundNode.deleted = false
 		return
 	}
 
@@ -65,7 +66,7 @@ func (h *HashMap) Delete(key int) {
 	}
 
 	foundNode, _ := h.searchNode(key)
-	if foundNode == nil {
+	if foundNode == nil || foundNode.deleted == true {
 		return
 	}
 
@@ -76,7 +77,7 @@ func (h *HashMap) Delete(key int) {
 // Search returns the value for the given key.
 // If the key cannot be found, it returns KeyNotFound.
 func (h *HashMap) Search(key int) int {
-	if foundNode, _ := h.searchNode(key); foundNode != nil {
+	if foundNode, _ := h.searchNode(key); foundNode != nil && foundNode.deleted == false {
 		return foundNode.value
 	}
 	return KeyNotFound
@@ -84,7 +85,9 @@ func (h *HashMap) Search(key int) int {
 
 func (h *HashMap) searchNode(key int) (*node, int) {
 	tries := 1
-	for true {
+	capacity := len(h.items)
+
+	for tries <= capacity {
 		index := h.hash(key, tries)
 		curNode := h.items[index]
 
@@ -92,7 +95,7 @@ func (h *HashMap) searchNode(key int) (*node, int) {
 			return nil, index
 		}
 
-		if curNode.key == key && curNode.deleted == false {
+		if curNode.key == key {
 			return curNode, index
 		}
 
