@@ -64,7 +64,7 @@ func (a *Array) Insert(value int, index int) error {
 	}
 
 	if a.getLoadFactor() >= upperLoadFactor {
-		a.changeCapacity(true)
+		a.grow()
 	}
 
 	// shift array to the right
@@ -81,7 +81,7 @@ func (a *Array) Insert(value int, index int) error {
 // Append adds the value to the end of the Array.
 func (a *Array) Append(value int) {
 	if a.getLoadFactor() >= upperLoadFactor {
-		a.changeCapacity(true)
+		a.grow()
 	}
 
 	a.items[a.size] = value
@@ -96,7 +96,7 @@ func (a *Array) RemoveAt(index int) error {
 	}
 
 	if a.getLoadFactor() < lowerLoadFactor {
-		a.changeCapacity(false)
+		a.shrink()
 	}
 
 	// shift array to the left
@@ -115,7 +115,7 @@ func (a *Array) Pop() int {
 	}
 
 	if a.getLoadFactor() < lowerLoadFactor {
-		a.changeCapacity(false)
+		a.shrink()
 	}
 
 	a.size--
@@ -126,19 +126,20 @@ func (a *Array) getLoadFactor() float64 {
 	return float64(a.size) / float64(len(a.items))
 }
 
-func (a *Array) changeCapacity(isGrow bool) {
-	oldCapacity := len(a.items)
-	var newCapacity int
-	if isGrow {
-		newCapacity = oldCapacity * growShrinkFactor
-	} else {
-		newCapacity = oldCapacity / growShrinkFactor
-	}
+func (a *Array) grow() {
+	newCapacity := len(a.items) * growShrinkFactor
+	a.resize(newCapacity)
+}
 
+func (a *Array) shrink() {
+	newCapacity := len(a.items) / growShrinkFactor
+	a.resize(newCapacity)
+}
+
+func (a *Array) resize(newCapacity int) {
 	newArr := make([]int, newCapacity)
 	for i := 0; i < a.size; i++ {
 		newArr[i] = a.items[i]
 	}
-
 	a.items = newArr
 }
