@@ -44,47 +44,18 @@ func (h *HashMap) Insert(key int, value int) {
 		value: value,
 	}
 
-	h.size++
-
-	tries := 1
-	for true {
-		index := h.hash(key, tries)
-		curNode := h.items[index]
-
-		if curNode == nil || curNode.deleted == true {
-			h.items[index] = newNode
-			return
-		}
-
-		if curNode.key == key {
-			curNode.value = value
-			return
-		}
-
-		tries++
-	}
-}
-
-// Search returns the value for the given key.
-// If the key cannot be found, it returns KeyNotFound.
-func (h *HashMap) Search(key int) int {
-	tries := 1
-	for true {
-		index := h.hash(key, tries)
-		curNode := h.items[index]
-
-		if curNode == nil {
-			return KeyNotFound
-		}
-
-		if curNode.key == key && curNode.deleted == false {
-			return curNode.value
-		}
-
-		tries++
+	foundNode, index := h.searchNode(key)
+	if foundNode != nil {
+		// overwrite value of this key
+		foundNode.value = value
+		return
 	}
 
-	return KeyNotFound
+	if index > -1 {
+		// insert to this empty slot
+		h.items[index] = newNode
+		h.size++
+	}
 }
 
 // Delete removes a key from the HashMap.
@@ -93,24 +64,42 @@ func (h *HashMap) Delete(key int) {
 		h.shrink()
 	}
 
-	h.size--
+	foundNode, _ := h.searchNode(key)
+	if foundNode == nil {
+		return
+	}
 
+	foundNode.deleted = true
+	h.size--
+}
+
+// Search returns the value for the given key.
+// If the key cannot be found, it returns KeyNotFound.
+func (h *HashMap) Search(key int) int {
+	if foundNode, _ := h.searchNode(key); foundNode != nil {
+		return foundNode.value
+	}
+	return KeyNotFound
+}
+
+func (h *HashMap) searchNode(key int) (*node, int) {
 	tries := 1
 	for true {
 		index := h.hash(key, tries)
 		curNode := h.items[index]
 
 		if curNode == nil {
-			return
+			return nil, index
 		}
 
-		if curNode.key == key {
-			curNode.deleted = true
-			return
+		if curNode.key == key && curNode.deleted == false {
+			return curNode, index
 		}
 
 		tries++
 	}
+
+	return nil, -1
 }
 
 func (h *HashMap) capacity() int {
