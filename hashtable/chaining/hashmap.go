@@ -65,13 +65,13 @@ func (h *HashMap) Insert(key int, value int) {
 
 // Delete removes a key from the HashMap.
 func (h *HashMap) Delete(key int) {
-	if h.getLoadFactor() < lowerLoadFactor {
-		h.shrink()
-	}
-
 	foundNode, index := h.searchNode(key)
 	if foundNode == nil {
 		return
+	}
+
+	if h.getLoadFactor() < lowerLoadFactor {
+		h.shrink()
 	}
 
 	h.size--
@@ -85,6 +85,7 @@ func (h *HashMap) Delete(key int) {
 	if foundNode.next == nil {
 		// last node in the linked list
 		foundNode.prev.next = nil
+		return
 	}
 
 	prevNode := foundNode.prev
@@ -140,9 +141,8 @@ func (h *HashMap) shrink() {
 }
 
 func (h *HashMap) rehash(newLength int) {
-	newArr := make([]*node, newLength)
 	oldArr := h.items
-	h.items = newArr
+	h.items = make([]*node, newLength)
 	h.size = 0
 
 	for _, curNode := range oldArr {
