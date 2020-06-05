@@ -2,13 +2,13 @@ package stack
 
 // Empty is a constant indicates that
 // the returned value is empty.
-const Empty 0
+const Empty = 0
 
 // Stack is a struct for storing values
 // which follow LIFO order.
 type Stack struct {
-	items  []int
-	size int
+	items []int
+	size  int
 }
 
 // NewStack creates a new Stack instance
