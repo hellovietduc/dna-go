@@ -37,6 +37,7 @@ func TestBST(t *testing.T) {
 				t.Errorf("Expected the inorder traversal of the tree to be ascending, found %d > %d", cur, prev)
 				return
 			}
+			prev = cur
 		}
 	})
 
@@ -110,6 +111,17 @@ func TestBST(t *testing.T) {
 		tree.Delete(4)
 		if node := tree.Search(5); node.Value != 5 {
 			t.Error("Expected the new root value to be 5")
+		}
+	})
+
+	t.Run("Delete all nodes from the tree", func(t *testing.T) {
+		nodes := tree.GetInorderTraversal()
+		for _, val := range nodes {
+			tree.Delete(val)
+		}
+
+		if tree.root != nil {
+			t.Errorf("Expected all nodes to be deleted from the tree, found root to be %d", tree.root.Value)
 		}
 	})
 }
