@@ -39,7 +39,7 @@ func TestBST(t *testing.T) {
 				t.Errorf("Expected the inorder traversal of the tree to be ascending, found %d > %d", cur, prev)
 				return
 			}
-			prev = nodes[i]
+			prev = cur
 		}
 	})
 
