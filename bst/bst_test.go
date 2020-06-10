@@ -39,6 +39,7 @@ func TestBST(t *testing.T) {
 				t.Errorf("Expected the inorder traversal of the tree to be ascending, found %d > %d", cur, prev)
 				return
 			}
+			prev = nodes[i]
 		}
 	})
 
@@ -82,12 +83,12 @@ func TestBST(t *testing.T) {
 			}
 		}
 
-		node4 := tree.Search(4)
-		if node4.Left.Value != 1 {
+		node := tree.Search(4)
+		if node.Left.Value != 1 {
 			t.Error("Expected node 4's left child is now 1")
 			return
 		}
-		if node4.Right.Value != 6 {
+		if node.Right.Value != 6 {
 			t.Error("Expected node 4's right child is now 6")
 			return
 		}
@@ -103,12 +104,12 @@ func TestBST(t *testing.T) {
 			}
 		}
 
-		node1 := tree.Search(1)
-		if node1.IsLeaf() {
+		node := tree.Search(1)
+		if node.IsLeaf() {
 			t.Error("Expected node 1 not to be a leaf node now")
 			return
 		}
-		if node1.Right.Value != 6 {
+		if node.Right.Value != 6 {
 			t.Error("Expected node 1's right child is now 6")
 			return
 		}
@@ -118,6 +119,17 @@ func TestBST(t *testing.T) {
 		tree.Delete(8)
 		if node := tree.Search(6); node.Value != 6 {
 			t.Error("Expected the new root value to be 6")
+		}
+	})
+
+	t.Run("Delete all nodes from the tree", func(t *testing.T) {
+		nodes := tree.GetInorderTraversal()
+		for _, val := range nodes {
+			tree.Delete(val)
+		}
+
+		if tree.root != nil {
+			t.Errorf("Expected all nodes to be deleted from the tree, found root to be %d", tree.root.Value)
 		}
 	})
 }
