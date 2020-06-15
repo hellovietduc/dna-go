@@ -118,6 +118,16 @@ func (a *Array) Pop() int {
 	return a.items[a.size]
 }
 
+// Swap swaps the values at the given indices in-place.
+func (a *Array) Swap(index1, index2 int) {
+	if index1 < 0 || index1 >= a.size || index2 < 0 || index2 >= a.size {
+		return
+	}
+	tmp := a.items[index1]
+	a.items[index1] = a.items[index2]
+	a.items[index2] = tmp
+}
+
 func (a *Array) getLoadFactor() float64 {
 	return float64(a.size) / float64(len(a.items))
 }
