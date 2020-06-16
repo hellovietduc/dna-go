@@ -1,101 +1,88 @@
 package heap
 
-import "github.com/vietduc01100001/dna-go/array"
-
-const (
-	// EmptyValue is a constant indicates that
-	// a value returned from the MaxHeap is empty.
-	EmptyValue = 0
-)
-
 // MaxHeap is a struct for storing values into a Max Heap.
 type MaxHeap struct {
-	items *array.Array
+	items *NodeArray
 }
 
 // NewMaxHeap creates a new MaxHeap instance.
 func NewMaxHeap() *MaxHeap {
 	return &MaxHeap{
-		items: array.NewArray(),
+		items: NewNodeArray(),
 	}
 }
 
 // Peek returns the root value of the MaxHeap.
-func (h *MaxHeap) Peek() int {
-	value, err := h.items.ValueAt(0)
-	if err != nil {
-		return EmptyValue
+func (h *MaxHeap) Peek() (string, int) {
+	if node := h.items.ValueAt(0); node != nil {
+		return node.value, node.key
 	}
-	return value
+	return "", 0
 }
 
 // Insert adds the value to the MaxHeap.
-func (h *MaxHeap) Insert(value int) {
-	h.items.Append(value)
-	h.shiftUp(h.getLastIndex())
+func (h *MaxHeap) Insert(key int, value string) {
+	node := &Node{key, value}
+	h.items.Append(node)
+	h.shiftUp(h.getLastIndex(), key)
 }
 
 // Delete removes the value from the MaxHeap.
-func (h *MaxHeap) Delete(value int) {
+func (h *MaxHeap) ExtractMax() {
 	h.items.Swap(0, h.getLastIndex())
-	h.items.RemoveAt(h.getLastIndex())
-	h.shiftDown(0)
+	h.items.Pop()
+	_, newMax := h.Peek()
+	h.shiftDown(0, newMax)
 }
 
-func (h *MaxHeap) shiftUp(childIndex int) {
+func (h *MaxHeap) shiftUp(childIndex, childKey int) {
 	if !h.hasParent(childIndex) {
 		return
 	}
 
 	parentIndex := h.getParentIndex(childIndex)
-	parentValue, _ := h.items.ValueAt(parentIndex)
-	childValue, _ := h.items.ValueAt(childIndex)
+	parent := h.items.ValueAt(parentIndex)
 
-	if childValue > parentValue {
+	if childKey > parent.key {
 		h.items.Swap(childIndex, parentIndex)
-		h.shiftUp(parentIndex)
+		h.shiftUp(parentIndex, childKey)
 	}
 }
 
-func (h *MaxHeap) shiftDown(parentIndex int) {
+func (h *MaxHeap) shiftDown(parentIndex, parentKey int) {
 	hasLeftChild := h.hasLeftChild(parentIndex)
 	hasRightChild := h.hasRightChild(parentIndex)
+	hasBothChildren := hasLeftChild && hasRightChild
 
-	if !hasLeftChild && !hasRightChild {
+	if !hasBothChildren {
 		return
 	}
 
-	parentValue, _ := h.items.ValueAt(parentIndex)
-	swapValue := 0
-	swapIndex := -1
+	leftChildIndex := h.getLeftChildIndex(parentIndex)
+	rightChildIndex := h.getRightChildIndex(parentIndex)
+	leftChild := h.items.ValueAt(leftChildIndex)
+	rightChild := h.items.ValueAt(rightChildIndex)
 
-	if hasLeftChild && hasRightChild {
-		leftChildIndex := h.getLeftChildIndex(parentIndex)
-		rightChildIndex := h.getRightChildIndex(parentIndex)
-		leftChildValue, _ := h.items.ValueAt(leftChildIndex)
-		rightChildValue, _ := h.items.ValueAt(rightChildIndex)
-		if leftChildValue > rightChildValue {
-			swapValue = leftChildValue
-			swapIndex = leftChildIndex
+	var childIndex, childKey int
+	if hasBothChildren {
+		if leftChild.key > rightChild.key {
+			childIndex = leftChildIndex
+			childKey = leftChild.key
 		} else {
-			swapValue = rightChildIndex
-			swapIndex = rightChildIndex
+			childIndex = rightChildIndex
+			childKey = rightChild.key
 		}
 	} else if hasLeftChild {
-		leftChildIndex := h.getLeftChildIndex(parentIndex)
-		leftChildValue, _ := h.items.ValueAt(leftChildIndex)
-		swapValue = leftChildValue
-		swapIndex = leftChildIndex
+		childIndex = leftChildIndex
+		childKey = leftChild.key
 	} else {
-		rightChildIndex := h.getRightChildIndex(parentIndex)
-		rightChildValue, _ := h.items.ValueAt(rightChildIndex)
-		swapValue = rightChildValue
-		swapIndex = rightChildIndex
+		childIndex = rightChildIndex
+		childKey = rightChild.key
 	}
 
-	if swapValue > parentValue {
-		h.items.Swap(swapIndex, parentIndex)
-		h.shiftDown(swapIndex)
+	if childKey > parentKey {
+		h.items.Swap(childIndex, parentIndex)
+		h.shiftDown(childIndex, parentKey)
 	}
 }
 
